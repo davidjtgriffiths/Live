@@ -1,0 +1,246 @@
+Make new Laravel project with NodeJs Package Manager included
+
+composer create-project --prefer-dist laravel/laravel starterproject
+cd starterproject
+npm install
+npm run dev
+
+Create a database.sqlite and update database.php file
+
+'default' => env('DB_CONNECTION', 'sqlite'),
+
+Update .env file with database details
+
+DB_CONNECTION=sqlite
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=C:\Users\Dave\OneDrive\LaravelLocal\starterproject\database\database.sqlite
+DB_USERNAME=homestead
+DB_PASSWORD=secret
+
+Add front end auth
+
+composer require laravel/ui
+php artisan ui:auth
+
+npm install
+npm run dev
+
+
+Install Backpack
+
+composer require backpack/crud
+php artisan backpack:base:install --timeout=0
+php artisan backpack:crud:install --timeout=0
+(yes)
+composer require backpack/permissionmanager
+php artisan vendor:publish --provider="Spatie\Permission\PermissionServiceProvider" --tag="migrations"
+php artisan vendor:publish --provider="Spatie\Permission\PermissionServiceProvider" --tag="config"
+php artisan migrate
+php artisan vendor:publish --provider="Backpack\PermissionManager\PermissionManagerServiceProvider"
+
+Add the Backpack Traits to the user model
+
+use Backpack\CRUD\CrudTrait;
+use Spatie\Permission\Traits\HasRoles;
+
+class User extends Authenticatable
+{
+    use CrudTrait;
+    use HasRoles;
+
+Add to sidebar_content.blade.php
+<!-- Users, Roles Permissions -->
+  <li class="treeview">
+    <a href="#"><i class="fa fa-group"></i> <span>Users, Roles, Permissions</span> <i class="fa fa-angle-left pull-right"></i></a>
+    <ul class="treeview-menu">
+      <li><a href="{{ backpack_url('user') }}"><i class="fa fa-user"></i> <span>Users</span></a></li>
+      <li><a href="{{ backpack_url('role') }}"><i class="fa fa-group"></i> <span>Roles</span></a></li>
+      <li><a href="{{ backpack_url('permission') }}"><i class="fa fa-key"></i> <span>Permissions</span></a></li>
+    </ul>
+  </li>
+
+Uncomment in config/backpack/base.php
+Backpack\Base\app\Http\Middleware\UseBackpackAuthGuardInsteadOfDefaultAuthGuard::class,
+
+composer require backpack/logmanager
+php artisan backpack:base:add-sidebar-content "<li><a href='{{ url(config('backpack.base.route_prefix', 'admin').'/log') }}'><i class='fa fa-terminal'></i> <span>Logs</span></a></li>"
+
+composer require backpack/settings
+php artisan vendor:publish --provider="Backpack\Settings\SettingsServiceProvider"
+php artisan migrate
+php artisan backpack:base:add-sidebar-content "<li><a href='{{ url(config('backpack.base.route_prefix', 'admin') . '/setting') }}'><i class='fa fa-cog'></i> <span>Settings</span></a></li>"
+
+composer require backpack/menucrud
+
+Add to config/app.php
+Backpack\MenuCRUD\MenuCRUDServiceProvider::class,
+php artisan vendor:publish --provider="Backpack\MenuCRUD\MenuCRUDServiceProvider"
+php artisan migrate
+
+Add to sidebar_content.blade.php
+<li><a href="{{ backpack_url('menu-item') }}"><i class="fa fa-list"></i> <span>Menu</span></a></li>
+
+composer require jeremykenedy/laravel-logger
+** copy config/laravel-logger.php to the right place and change mysql to sqlite **
+php artisan migrate
+php artisan vendor:publish --tag=LaravelLogger
+
+composer require barryvdh/laravel-debugbar --dev
+
+
+
+
+php artisan vendor:publish --provider="Barryvdh\Debugbar\ServiceProvider"
+
+composer require nothingworks/blade-svg
+php artisan vendor:publish --provider="BladeSvg\BladeSvgServiceProvider"
+
+composer require laravelcollective/html
+
+In <head>
+<!-- Material Design material.io -->
+    
+<link rel="stylesheet" href="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.css">
+    
+<script src="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.js"></script>
+    
+<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+
+
+
+
+
+
+
+
+
+
+
+zip this up and put it on a stick and save to googledrive and onedrive
+also put it on github
+
+
+---------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+add menu
+<!-- Users, Roles Permissions -->
+  <li class="treeview">
+    <a href="#"><i class="fa fa-group"></i> <span>Users, Roles, Permissions</span> <i class="fa fa-angle-left pull-right"></i></a>
+    <ul class="treeview-menu">
+      <li><a href="{{ backpack_url('user') }}"><i class="fa fa-user"></i> <span>Users</span></a></li>
+      <li><a href="{{ backpack_url('role') }}"><i class="fa fa-group"></i> <span>Roles</span></a></li>
+      <li><a href="{{ backpack_url('permission') }}"><i class="fa fa-key"></i> <span>Permissions</span></a></li>
+    </ul>
+  </li>
+
+Optional] If you want to use the @can handler inside Backpack routes, you can add a middleware to all your Backpack routes by adding this to your config/backpack/base.php file:
+    // The classes for the middleware to check if the visitor is an admin
+    // Can be a single class or an array of clases
+    'middleware_class' => [
+        App\Http\Middleware\CheckIfAdmin::class,
+        \Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull::class,
++       Backpack\Base\app\Http\Middleware\UseBackpackAuthGuardInsteadOfDefaultAuthGuard::class,    #<--------uncomment this line
+    ],
+
+
+
+create CRUD
+php artisan make:controller TagController --resource
+Route::resource('tagss', 'TagController');
+php artisan make:migration create_tags_table --create=tags
+add fields to migration
+php artisan migrate
+php artisan make:model Tag
+inside controller create function
+return view('tags.create');
+inside views folder create tags folder
+inside tags folder create file create.blade.php
+copy shizzle for includes and create input form
+<form method="POST" action="{{ route('venues.store') }}">
+write store function
+$this->validate($request, [
+'name' => 'required|max:255',
+
+]);
+$venue = new Venue();
+      
+$venue->name = $request->name;
+
+      
+if ($venue->save()) {
+return redirect()->route('venues.show', $venue->id);
+} 
+else 
+{
+
+return redirect()->route('venues.create');
+}
+make show method
+$venue = Venue::FindOrFail($id);
+      
+return view('venues.show')->with('venue', $venue);
+create show view
+{{ $venue->name }}
+index method
+$venues = Venue::orderBy('id', 'dec')->paginate(5);  
+return view('venues.index')->with('venues', $venues);
+in index for pagination links:
+{{ $venues->links() }}
+
+create foreign key
+up
+Schema::table('comments', function (Blueprint $table) {
+          
+$table->integer('post_id')->unsigned();
+          
+$table->foreign('post_id')->references('id')->on('posts')->onDelete('cascade');
+        
+});
+
+down
+Schema::table('comments', function (Blueprint $table) {
+          
+$table->dropForeign('rooms_post_id_foreign');
+          
+$table->dropColumn('post_id');
+        
+});
+
+
+create relarionships
+in Venue.php
+public function rooms(){
+
+    
+return $this->hasMany('App\Room');
+
+  
+}
+
+in Room.php
+public function venue(){
+
+    
+return $this->belongsTo('App\Venue');
+
+  
+}
+
+now when saving room in RoomController
+$room = new Room();
+      
+$room->name = $request->name;
+      
+$venue = Venue::findOrFail($request->venues_id);
+      
+$venue->rooms()->save($room);
+
